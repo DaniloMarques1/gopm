@@ -146,12 +146,20 @@ func (manager *Manager) Shell(master *model.Master) {
 		case HELP:
 			manager.help()
 		case GET:
-			if len(args) == 0 {
+			if len(args) < 1 {
 				fmt.Println("You need to provide the password name")
 				continue
 			}
-			passwordName := strings.Join(args, " ")
-			manager.getPassword(passwordName)
+			// TODO wont allow spaces
+			passwordName := args[0]
+			manager.getPassword(master.Id, passwordName)
+		case SAVE:
+			if len(args) < 2 {
+				fmt.Println("You need to provide the password name along with the password itself")
+				continue
+			}
+			pwdName, pwd := args[0], args[1]
+			manager.savePassword(master.Id, pwdName, pwd)
 		default:
 			continue
 		}
@@ -167,11 +175,11 @@ func (manager *Manager) parseCmd(input string) (string, []string, error) {
 	return cmdWithArgs[0], cmdWithArgs[1:], nil
 }
 
-func (manager *Manager) getPassword(name string) {
-	password, err := manager.passwordRepository.FindByName(name)
+func (manager *Manager) getPassword(masterId, name string) {
+	password, err := manager.passwordRepository.FindByName(masterId, name)
 	if err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
-			fmt.Println("No password found")
+			fmt.Printf("The password name %v was not found\n", name)
 			return
 		} else {
 			log.Fatal(err)
@@ -180,10 +188,28 @@ func (manager *Manager) getPassword(name string) {
 	fmt.Println(password.Pwd)
 }
 
+func (manager *Manager) savePassword(masterId, pwdName, pwd string) {
+	password := model.Password{
+		Id: uuid.NewString(),
+		Name: pwdName,
+		Pwd: pwd,
+		MasterId: masterId,
+	} 
+	err := manager.passwordRepository.Save(&password)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Password stored successfully")
+}
+
 func (manager *Manager) help() {
+	fmt.Println("The commands are usually used as follows")
+	fmt.Println("\tget password_name")
+	fmt.Println("\tsave password_name password_itself")
+	fmt.Println()
 	fmt.Println("List of available commands:")
 	fmt.Println("\thelp   - \tShow the usage of the program")
-	fmt.Println("\taccess - \tHave a shell acess as master")
+	fmt.Println("\taccess - \tHave a shell access as master")
 	fmt.Println("\tget    - \tWill retrieve a stored password. You need to provide the password name you used when you save it")
 	fmt.Println("\tsave   - \tWil save a password. You need to provide the password name and the password itself when using the command")
 }
