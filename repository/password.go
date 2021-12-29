@@ -19,7 +19,18 @@ func (pr *PasswordRepositoryImpl) Save(password *model.Password) error {
 }
 
 func (pr *PasswordRepositoryImpl) FindByName(name string) (*model.Password, error) {
-	return nil, nil
+	stmt, err := pr.db.Prepare("select id, name, pwd from password where name = $1")
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+	
+	var pwd model.Password
+	err = stmt.QueryRow(name).Scan(&pwd.Id, &pwd.Name, &pwd.Pwd)
+	if err != nil {
+		return nil, err
+	}
+	return &pwd, nil
 }
 
 func (pr *PasswordRepositoryImpl) RemoveByName(name string) error {

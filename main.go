@@ -34,6 +34,8 @@ const TABLES = `
 const (
 	HELP    = "help"
 	ACCESS  = "access"
+	GET     = "get"
+	SAVE    = "save"
 )
 
 // errors
@@ -143,14 +145,16 @@ func (manager *Manager) Shell(master *model.Master) {
 		switch cmd {
 		case HELP:
 			manager.help()
+		case GET:
+			if len(args) == 0 {
+				fmt.Println("You need to provide the password name")
+				continue
+			}
+			passwordName := strings.Join(args, " ")
+			manager.getPassword(passwordName)
 		default:
 			continue
 		}
-
-		fmt.Println(cmd)
-		fmt.Println(args)
-		joined := strings.Join(args, " ")
-		fmt.Println(joined)
 	}
 }
 
@@ -163,8 +167,23 @@ func (manager *Manager) parseCmd(input string) (string, []string, error) {
 	return cmdWithArgs[0], cmdWithArgs[1:], nil
 }
 
+func (manager *Manager) getPassword(name string) {
+	password, err := manager.passwordRepository.FindByName(name)
+	if err != nil {
+		if errors.Is(sql.ErrNoRows, err) {
+			fmt.Println("No password found")
+			return
+		} else {
+			log.Fatal(err)
+		}
+	}
+	fmt.Println(password.Pwd)
+}
+
 func (manager *Manager) help() {
 	fmt.Println("List of available commands:")
 	fmt.Println("\thelp   - \tShow the usage of the program")
 	fmt.Println("\taccess - \tHave a shell acess as master")
+	fmt.Println("\tget    - \tWill retrieve a stored password. You need to provide the password name you used when you save it")
+	fmt.Println("\tsave   - \tWil save a password. You need to provide the password name and the password itself when using the command")
 }
