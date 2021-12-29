@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/danilomarques1/gopm/model"
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ const TABLES = `
 	CREATE TABLE IF NOT EXISTS password(
 		id VARCHAR(36) PRIMARY KEY,
 		master_id VARCHAR(36) NOT NULL,
-		name VARCHAR(50) NOT NULL,
+		name VARCHAR(50) NOT NULL UNIQUE,
 		pwd VARCHAR(100) NOT NULL,
 		FOREIGN KEY(master_id) REFERENCES master(id)
 	);
@@ -33,6 +34,11 @@ const TABLES = `
 const (
 	HELP    = "help"
 	ACCESS  = "access"
+)
+
+// errors
+const (
+	CMD_NOT_FOUND = "Command not found"
 )
 
 type Manager struct {
@@ -122,6 +128,39 @@ func (manager *Manager) createMaster(pwd string) error {
 }
 
 func (manager *Manager) Shell(master *model.Master) {
+	scanner := bufio.NewScanner(os.Stdin)
+	var input string
+	for {
+		fmt.Print(">> ")
+		if scanner.Scan() {
+			input = scanner.Text()
+		}
+
+		cmd, args, err := manager.parseCmd(input)
+		if err != nil {
+			log.Fatal(err)
+		}
+		switch cmd {
+		case HELP:
+			manager.help()
+		default:
+			continue
+		}
+
+		fmt.Println(cmd)
+		fmt.Println(args)
+		joined := strings.Join(args, " ")
+		fmt.Println(joined)
+	}
+}
+
+func (manager *Manager) parseCmd(input string) (string, []string, error) {
+	if len(input) == 0 {
+		return "", nil, errors.New(CMD_NOT_FOUND)
+	}
+
+	cmdWithArgs := strings.Split(input, " ")
+	return cmdWithArgs[0], cmdWithArgs[1:], nil
 }
 
 func (manager *Manager) help() {

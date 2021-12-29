@@ -25,3 +25,7 @@ func (pr *PasswordRepositoryImpl) FindByName(name string) (*model.Password, erro
 func (pr *PasswordRepositoryImpl) RemoveByName(name string) error {
 	return nil
 }
+
+func (pr *PasswordRepositoryImpl) FindAll() ([]model.Password, error) {
+	return nil, nil
+}

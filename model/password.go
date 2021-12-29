@@ -9,4 +9,5 @@ type PasswordRepository interface {
 	Save(*Password) error
 	FindByName(string) (*Password, error)
 	RemoveByName(string) error
+	FindAll() ([]Password, error)
 }
