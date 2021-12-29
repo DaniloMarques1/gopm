@@ -3,24 +3,26 @@ package main
 import (
 	"bufio"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/danilomarques1/gopm/model"
+	"github.com/google/uuid"
 	"github.com/danilomarques1/gopm/repository"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const tables = `
+const TABLES = `
 	CREATE TABLE IF NOT EXISTS master(
-		id PRIMARY KEY INTEGER AUTOINCREMENT
-		master_pwd VARCHAR(100) NOT NULL,
+		id VARCHAR(36) PRIMARY KEY,
+		master_pwd VARCHAR(100) NOT NULL
 	);
 	CREATE TABLE IF NOT EXISTS password(
-		id PRIMARY KEY INTEGER AUTOINCREMENT
-		master_id INTEGER,
+		id VARCHAR(36) PRIMARY KEY,
+		master_id VARCHAR(36) NOT NULL,
 		name VARCHAR(50) NOT NULL,
 		pwd VARCHAR(100) NOT NULL,
 		FOREIGN KEY(master_id) REFERENCES master(id)
@@ -51,6 +53,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if _, err := db.Exec(TABLES); err != nil {
+		log.Fatal(err)
+	}
 
 	masterRepository := repository.NewMasterRepository(db)
 	passwordRepository := repository.NewPasswordRepository(db)
@@ -61,6 +66,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	manager.Run()
+}
+
+func (manager *Manager) Run() {
 	command, _ := manager.parseCmdArgs()
 	switch command {
 	case HELP:
@@ -82,6 +91,37 @@ func (manager *Manager) requireMasterPwd() {
 	if scanner.Scan() {
 		pwd = scanner.Text()
 	}
+	master, err := manager.masterRepository.FindByPassword(pwd)
+	if err != nil {
+		if errors.Is(sql.ErrNoRows, err) {
+			fmt.Print("No master found associated with the given password. Would you like to create a master with this password? y/n ")
+			var answer string
+			if scanner.Scan() {
+				answer = scanner.Text()
+			}
+
+			if answer == "y" {
+				if err := manager.createMaster(pwd); err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println("Master successfully created")
+			}
+			return
+		} else {
+			log.Fatal(err)
+		}
+	}
+
+	manager.Shell(master)
+}
+
+func (manager *Manager) createMaster(pwd string) error {
+	master := model.Master{Id: uuid.NewString(), MasterPwd: pwd}
+	err := manager.masterRepository.Save(&master)
+	return err
+}
+
+func (manager *Manager) Shell(master *model.Master) {
 }
 
 func (manager *Manager) help() {

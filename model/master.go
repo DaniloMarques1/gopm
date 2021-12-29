@@ -1,6 +1,7 @@
 package model
 
 type Master struct {
+	Id        string
 	MasterPwd string
 }
 
