@@ -1,9 +1,9 @@
 package model
 
 type Password struct {
-	Id   	 string
-	Name 	 string
-	Pwd  	 string
+	Id       string
+	Name     string
+	Pwd      string
 	MasterId string
 }
 

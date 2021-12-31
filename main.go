@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/danilomarques1/gopm/model"
@@ -37,6 +38,7 @@ const (
 	GET     = "get"
 	SAVE    = "save"
 	REMOVE  = "remove"
+	CLEAR   = "clear"
 )
 
 // errors
@@ -85,6 +87,8 @@ func (manager *Manager) Run() {
 		manager.help()
 	case ACCESS:
 		manager.requireMasterPwd()
+	default:
+		manager.help()
 	}
 }
 
@@ -168,6 +172,16 @@ func (manager *Manager) Shell(master *model.Master) {
 			}
 			pwdName := args[0]
 			manager.removePassword(master.Id, pwdName)
+		case CLEAR:
+			// TODO somehow clear the shell
+			/*
+			NOTE: this did not worked
+			err := exec.Command("ls").Run()
+			if err != nil {
+				fmt.Printf("%v\n", err)
+				continue
+			}
+			*/
 		default:
 			continue
 		}
