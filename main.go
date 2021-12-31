@@ -37,6 +37,7 @@ const (
 	GET     = "get"
 	SAVE    = "save"
 	REMOVE  = "remove"
+	KEYS    = "keys"
 	CLEAR   = "clear"
 )
 
@@ -72,8 +73,7 @@ func main() {
 	manager := NewManager(masterRepository, passwordRepository)
 
 	if len(os.Args) == 1 {
-		log.Printf("You need to give the command. See help for details")
-		os.Exit(1)
+		log.Fatal("You need to give a command. See help for details")
 	}
 
 	manager.Run()
@@ -171,6 +171,8 @@ func (manager *Manager) Shell(master *model.Master) {
 			}
 			pwdName := args[0]
 			manager.removePassword(master.Id, pwdName)
+		case KEYS:
+			manager.showKeys(master.Id)
 		case CLEAR:
 			// TODO somehow clear the shell
 			/*
@@ -182,6 +184,7 @@ func (manager *Manager) Shell(master *model.Master) {
 			}
 			*/
 		default:
+			fmt.Println("Command not found")
 			continue
 		}
 	}
@@ -237,6 +240,17 @@ func (manager *Manager) removePassword(masterId, pwdName string) {
 		log.Fatal(err)
 	}
 	fmt.Printf("The password %v was removed successfully.\n", pwdName)
+}
+
+func (manager *Manager) showKeys(masterId string) {
+	passwords, err := manager.passwordRepository.FindAll(masterId)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, password := range passwords {
+		fmt.Println(password.Name)
+	}
 }
 
 func (manager *Manager) help() {

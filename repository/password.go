@@ -57,6 +57,27 @@ func (pr *PasswordRepositoryImpl) RemoveByName(masterId, name string) error {
 	return nil
 }
 
-func (pr *PasswordRepositoryImpl) FindAll() ([]model.Password, error) {
-	return nil, nil
+func (pr *PasswordRepositoryImpl) FindAll(masterId string) ([]model.Password, error) {
+	stmt, err := pr.db.Prepare("select name, pwd from password where master_id = $1")
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(masterId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var passwords []model.Password
+	for rows.Next() {
+		var password model.Password
+		err = rows.Scan(&password.Name, &password.Pwd)
+		if err != nil {
+			return nil, err
+		}
+		passwords = append(passwords, password)
+	}
+	return passwords, nil
 }
