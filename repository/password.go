@@ -43,7 +43,17 @@ func (pr *PasswordRepositoryImpl) FindByName(masterId, name string) (*model.Pass
 	return &pwd, nil
 }
 
-func (pr *PasswordRepositoryImpl) RemoveByName(name string) error {
+func (pr *PasswordRepositoryImpl) RemoveByName(masterId, name string) error {
+	stmt, err := pr.db.Prepare("delete from password where master_id = $1 and name = $2")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(masterId, name)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

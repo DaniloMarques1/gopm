@@ -36,6 +36,7 @@ const (
 	ACCESS  = "access"
 	GET     = "get"
 	SAVE    = "save"
+	REMOVE  = "remove"
 )
 
 // errors
@@ -160,6 +161,13 @@ func (manager *Manager) Shell(master *model.Master) {
 			}
 			pwdName, pwd := args[0], args[1]
 			manager.savePassword(master.Id, pwdName, pwd)
+		case REMOVE:
+			if len(args) < 1 {
+				fmt.Println("You need to provide the password name")
+				continue
+			}
+			pwdName := args[0]
+			manager.removePassword(master.Id, pwdName)
 		default:
 			continue
 		}
@@ -202,6 +210,22 @@ func (manager *Manager) savePassword(masterId, pwdName, pwd string) {
 	fmt.Println("Password stored successfully")
 }
 
+func (manager *Manager) removePassword(masterId, pwdName string) {
+	scanner := bufio.NewScanner(os.Stdin)
+	var confirmation string
+	fmt.Print("Are you sure you want to delete the password? y/n ")
+	if scanner.Scan() {
+		confirmation = scanner.Text()
+	}
+	if confirmation != "y" { return }
+
+	err := manager.passwordRepository.RemoveByName(masterId, pwdName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("The password %v was removed successfully.\n", pwdName)
+}
+
 func (manager *Manager) help() {
 	fmt.Println("The commands are usually used as follows")
 	fmt.Println("\tget password_name")
@@ -212,4 +236,5 @@ func (manager *Manager) help() {
 	fmt.Println("\taccess - \tHave a shell access as master")
 	fmt.Println("\tget    - \tWill retrieve a stored password. You need to provide the password name you used when you save it")
 	fmt.Println("\tsave   - \tWil save a password. You need to provide the password name and the password itself when using the command")
+	fmt.Println("\tremove - \tWil remove a password. You need to provide the password name when using the command")
 }

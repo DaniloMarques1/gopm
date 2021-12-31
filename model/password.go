@@ -10,6 +10,6 @@ type Password struct {
 type PasswordRepository interface {
 	Save(*Password) error
 	FindByName(string, string) (*Password, error)
-	RemoveByName(string) error
+	RemoveByName(string, string) error
 	FindAll() ([]Password, error)
 }
