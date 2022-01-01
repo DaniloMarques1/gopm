@@ -112,7 +112,7 @@ func (manager *Manager) requireMasterPwd() {
 	master, err := manager.masterRepository.FindByPassword(pwd)
 	if err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
-			fmt.Print("No master found associated with the given password. Would you like to create a master with this password? y/n ")
+			fmt.Print("No master found associated with the given password. Would you like to create a master with this password (y/n)? ")
 			var answer string
 			scanner := bufio.NewScanner(os.Stdin)
 			if scanner.Scan() {
@@ -247,7 +247,7 @@ func (manager *Manager) savePassword(masterId, pwdName, pwd string) {
 func (manager *Manager) removePassword(masterId, pwdName string) {
 	scanner := bufio.NewScanner(os.Stdin)
 	var confirmation string
-	fmt.Print("Are you sure you want to delete the password? y/n ")
+	fmt.Print("Are you sure you want to delete the password (y/n)? ")
 	if scanner.Scan() {
 		confirmation = scanner.Text()
 	}
@@ -277,6 +277,7 @@ func (manager *Manager) help() {
 	fmt.Println("The commands are usually used as follows")
 	fmt.Println("\tget password_name")
 	fmt.Println("\tsave password_name password_itself")
+	fmt.Println("\tclear")
 	fmt.Println()
 	fmt.Println("List of available commands:")
 	fmt.Printf("\t%v        \tShow the usage of the program\n", HELP)
