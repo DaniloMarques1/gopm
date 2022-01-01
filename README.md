@@ -12,3 +12,7 @@ gopm access
 >> save github my_password
 >> get github
 ```
+
+### TODO
+
+[ ] - fix the file's creation location
