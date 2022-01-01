@@ -8,10 +8,12 @@ import (
 	"log"
 	"os"
 	"strings"
+	"syscall"
 
 	"github.com/danilomarques1/gopm/model"
-	"github.com/google/uuid"
 	"github.com/danilomarques1/gopm/repository"
+	"github.com/google/uuid"
+	"golang.org/x/crypto/ssh/terminal"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -32,13 +34,13 @@ const TABLES = `
 
 // commands
 const (
-	HELP    = "help"
-	ACCESS  = "access"
-	GET     = "get"
-	SAVE    = "save"
-	REMOVE  = "remove"
-	KEYS    = "keys"
-	CLEAR   = "clear"
+	HELP   = "help"
+	ACCESS = "access"
+	GET    = "get"
+	SAVE   = "save"
+	REMOVE = "remove"
+	KEYS   = "keys"
+	CLEAR  = "clear"
 )
 
 // errors
@@ -54,7 +56,7 @@ type Manager struct {
 func NewManager(masterRepository model.MasterRepository,
 	passwordRepository model.PasswordRepository) *Manager {
 	return &Manager{
-		masterRepository: masterRepository,
+		masterRepository:   masterRepository,
 		passwordRepository: passwordRepository,
 	}
 }
@@ -97,17 +99,20 @@ func (manager *Manager) parseCmdArgs() (string, []string) {
 }
 
 func (manager *Manager) requireMasterPwd() {
-	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("Type the master password>> ")
-	var pwd string
-	if scanner.Scan() {
-		pwd = scanner.Text()
+	pwdBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		log.Fatal(err)
 	}
+	pwd := string(pwdBytes)
+	fmt.Println() // clears the buffer
+
 	master, err := manager.masterRepository.FindByPassword(pwd)
 	if err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
 			fmt.Print("No master found associated with the given password. Would you like to create a master with this password? y/n ")
 			var answer string
+			scanner := bufio.NewScanner(os.Stdin)
 			if scanner.Scan() {
 				answer = scanner.Text()
 			}
@@ -176,12 +181,12 @@ func (manager *Manager) Shell(master *model.Master) {
 		case CLEAR:
 			// TODO somehow clear the shell
 			/*
-			NOTE: this did not worked
-			err := exec.Command("ls").Run()
-			if err != nil {
-				fmt.Printf("%v\n", err)
-				continue
-			}
+				NOTE: this did not worked
+				err := exec.Command("ls").Run()
+				if err != nil {
+					fmt.Printf("%v\n", err)
+					continue
+				}
 			*/
 		default:
 			fmt.Println("Command not found")
@@ -214,11 +219,11 @@ func (manager *Manager) getPassword(masterId, name string) {
 
 func (manager *Manager) savePassword(masterId, pwdName, pwd string) {
 	password := model.Password{
-		Id: uuid.NewString(),
-		Name: pwdName,
-		Pwd: pwd,
+		Id:       uuid.NewString(),
+		Name:     pwdName,
+		Pwd:      pwd,
 		MasterId: masterId,
-	} 
+	}
 	err := manager.passwordRepository.Save(&password)
 	if err != nil {
 		log.Fatal(err)
@@ -233,7 +238,9 @@ func (manager *Manager) removePassword(masterId, pwdName string) {
 	if scanner.Scan() {
 		confirmation = scanner.Text()
 	}
-	if confirmation != "y" { return }
+	if confirmation != "y" {
+		return
+	}
 
 	err := manager.passwordRepository.RemoveByName(masterId, pwdName)
 	if err != nil {
