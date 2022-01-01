@@ -183,26 +183,24 @@ func (manager *Manager) Shell(master *model.Master) {
 			manager.showKeys(master.Id)
 		case CLEAR:
 			operatingSystem := runtime.GOOS
+			var cmdToBeExecuted string
+
 			switch operatingSystem {
 			case "linux":
-				cmd := exec.Command("clear")
-				out, err := cmd.Output()
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Print(string(out))
+				cmdToBeExecuted = "clear"
 			case "windows":
-				cmd := exec.Command("cls")
-				out, err := cmd.Output()
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Print(string(out))
-
+				cmdToBeExecuted = "cls"
 			default:
-				fmt.Println("Not implemented yet")
+				cmdToBeExecuted = "Not implemented yet"
 
 			}
+
+			cmd := exec.Command(cmdToBeExecuted)
+			out, err := cmd.Output()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Print(string(out))
 		default:
 			fmt.Println(CMD_NOT_FOUND)
 			continue
