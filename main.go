@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 	"syscall"
 
@@ -149,8 +151,9 @@ func (manager *Manager) Shell(master *model.Master) {
 
 		cmd, args, err := manager.parseCmd(input)
 		if err != nil {
-			log.Fatal(err)
+			continue
 		}
+
 		switch cmd {
 		case HELP:
 			manager.help()
@@ -179,17 +182,29 @@ func (manager *Manager) Shell(master *model.Master) {
 		case KEYS:
 			manager.showKeys(master.Id)
 		case CLEAR:
-			// TODO somehow clear the shell
-			/*
-				NOTE: this did not worked
-				err := exec.Command("ls").Run()
+			operatingSystem := runtime.GOOS
+			switch operatingSystem {
+			case "linux":
+				cmd := exec.Command("clear")
+				out, err := cmd.Output()
 				if err != nil {
-					fmt.Printf("%v\n", err)
-					continue
+					log.Fatal(err)
 				}
-			*/
+				fmt.Print(string(out))
+			case "windows":
+				cmd := exec.Command("cls")
+				out, err := cmd.Output()
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Print(string(out))
+
+			default:
+				fmt.Println("Not implemented yet")
+
+			}
 		default:
-			fmt.Println("Command not found")
+			fmt.Println(CMD_NOT_FOUND)
 			continue
 		}
 	}
@@ -271,4 +286,5 @@ func (manager *Manager) help() {
 	fmt.Printf("\t%v        \tWill retrieve a stored password. You need to provide the password name you used when you save it\n", GET)
 	fmt.Printf("\t%v        \tWil save a password. You need to provide the password name and the password itself when using the command\n", SAVE)
 	fmt.Printf("\t%v        \tWil remove a password. You need to provide the password name when using the command\n", REMOVE)
+	fmt.Printf("\t%v        \tClears the shell\n", CLEAR)
 }
