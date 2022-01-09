@@ -43,6 +43,7 @@ const (
 	REMOVE = "remove"
 	KEYS   = "keys"
 	CLEAR  = "clear"
+	EXIT   = "exit"
 )
 
 // errors
@@ -64,7 +65,12 @@ func NewManager(masterRepository model.MasterRepository,
 }
 
 func main() {
-	db, err := sql.Open("sqlite3", "gopm.db")
+	fileName, err := getFileName()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db, err := sql.Open("sqlite3", fileName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -81,6 +87,16 @@ func main() {
 	}
 
 	manager.Run()
+}
+
+// will return the database fileName that wil be
+// the instalation location + the fileName itself
+func getFileName() (string, error) {
+	path, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	return path + ".db", nil
 }
 
 func (manager *Manager) Run() {
@@ -201,6 +217,8 @@ func (manager *Manager) Shell(master *model.Master) {
 				log.Fatal(err)
 			}
 			fmt.Print(string(out))
+		case EXIT:
+			os.Exit(1)
 		default:
 			fmt.Println(CMD_NOT_FOUND)
 			continue
@@ -285,5 +303,7 @@ func (manager *Manager) help() {
 	fmt.Printf("\t%v        \tWill retrieve a stored password. You need to provide the password name you used when you save it\n", GET)
 	fmt.Printf("\t%v        \tWil save a password. You need to provide the password name and the password itself when using the command\n", SAVE)
 	fmt.Printf("\t%v        \tWil remove a password. You need to provide the password name when using the command\n", REMOVE)
+	fmt.Printf("\t%v        \tReturn all the passwords keys stored\n", KEYS)
+	fmt.Printf("\t%v        \tExits the password manager\n", EXIT)
 	fmt.Printf("\t%v        \tClears the shell\n", CLEAR)
 }
