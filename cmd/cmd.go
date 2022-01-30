@@ -26,12 +26,9 @@ func Run(command string) {
 	cli := NewCLI()
 	switch command {
 	case ACCESS:
-		// TODO
 		cli.Access()
-		break
 	case REGISTER:
 		cli.Register()
-		break
 	default:
 		cli.Usage()
 	}

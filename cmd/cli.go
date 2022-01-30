@@ -194,6 +194,7 @@ func (cli *CLI) Usage() {
 	fmt.Println()
 	fmt.Println("List of available commands:")
 	fmt.Printf("\t%v        \tShow the usage of the program\n", HELP)
+	fmt.Printf("\t%v        Will create a new master user\n", REGISTER) // @@@ For some reason does not need \t
 	fmt.Printf("\t%v        \tHave a shell access as master\n", ACCESS)
 	fmt.Printf("\t%v        \tWill retrieve a stored password. You need to provide the password name you used when you save it\n", GET)
 	fmt.Printf("\t%v        \tWil save a password. You need to provide the password name and the password itself when using the command\n", SAVE)
