@@ -119,6 +119,7 @@ func (cli *CLI) Shell() {
 			response, err := cli.passwordService.Keys()
 			if err != nil {
 				fmt.Println(err)
+				continue
 			}
 			for idx, key := range response.Keys {
 				fmt.Printf("%v- %v\n", idx+1, key)
