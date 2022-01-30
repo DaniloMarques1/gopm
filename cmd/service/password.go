@@ -62,8 +62,54 @@ func (ps *PasswordService) Save(pwdDto *dto.PasswordRequestDto) error {
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
 	if response.StatusCode != http.StatusCreated {
 		return util.HandleError(response.Body)
 	}
 	return nil
+}
+
+func (ps *PasswordService) RemoveByKey(key string) error {
+	request, err := http.NewRequest(http.MethodDelete, BASE_URL+"/password/"+key, nil)
+	if err != nil {
+		return err
+	}
+	request.Header.Add("Authorization", "Bearer "+ps.Token)
+	response, err := ps.client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusNoContent {
+		return util.HandleError(response.Body)
+	}
+
+	return nil
+}
+
+func (ps *PasswordService) Keys() (*dto.KeysResponseDto, error) {
+	request, err := http.NewRequest(http.MethodGet, BASE_URL+"/keys", nil)
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Add("Authorization", "Bearer "+ps.Token)
+	response, err := ps.client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, util.HandleError(response.Body)
+	}
+	b, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	var keysDto dto.KeysResponseDto
+	if err := json.Unmarshal(b, &keysDto); err != nil {
+		return nil, err
+	}
+	return &keysDto, nil
 }

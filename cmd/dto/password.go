@@ -10,3 +10,7 @@ type PasswordResponseDto struct {
 	Key string `json:"key"`
 	Pwd string `json:"pwd"`
 }
+
+type KeysResponseDto struct {
+	Keys []string `json:"keys"`
+}

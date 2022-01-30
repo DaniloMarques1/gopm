@@ -41,6 +41,7 @@ func (cli *CLI) Register() {
 	fmt.Println("Master successfully created")
 }
 
+// sign in
 func (cli *CLI) Access() {
 	email := cli.getEmailFromInput()
 	password, err := cli.getPasswordFromInput()
@@ -57,6 +58,7 @@ func (cli *CLI) Access() {
 	cli.Shell()
 }
 
+// starts a shell to receive users input
 func (cli *CLI) Shell() {
 	if len(cli.passwordService.Token) == 0 {
 		log.Fatal("You should log in first")
@@ -95,8 +97,7 @@ func (cli *CLI) Shell() {
 			}
 			key, pwd := args[0], args[1]
 			pwdDto := dto.PasswordRequestDto{Key: key, Pwd: pwd}
-			err := cli.passwordService.Save(&pwdDto)
-			if err != nil {
+			if err := cli.passwordService.Save(&pwdDto); err != nil {
 				fmt.Println(err)
 				continue
 			}
@@ -107,8 +108,21 @@ func (cli *CLI) Shell() {
 				continue
 			}
 			// TODO do a delete request o remove a password
+			key := args[0]
+			if err := cli.passwordService.RemoveByKey(key); err != nil {
+				fmt.Println(err)
+				continue
+			}
+			fmt.Println("Password removed successfully")
+
 		case KEYS:
-			// TODO do a get request for all keys
+			response, err := cli.passwordService.Keys()
+			if err != nil {
+				fmt.Println(err)
+			}
+			for idx, key := range response.Keys {
+				fmt.Printf("%v- %v\n", idx+1, key)
+			}
 		case CLEAR:
 			operatingSystem := runtime.GOOS
 			var cmdToBeExecuted string
