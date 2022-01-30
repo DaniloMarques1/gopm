@@ -17,9 +17,9 @@ import (
 )
 
 type CLI struct {
-	masterService *service.MasterService
-	scanner       *bufio.Scanner
-	token         string // I GUESS?
+	masterService   *service.MasterService
+	passwordService *service.PasswordService
+	scanner         *bufio.Scanner
 }
 
 func NewCLI() *CLI {
@@ -52,12 +52,13 @@ func (cli *CLI) Access() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cli.token = response.Token
+	passwordService := service.NewPasswordService(response.Token)
+	cli.passwordService = passwordService
 	cli.Shell()
 }
 
 func (cli *CLI) Shell() {
-	if cli.token == "" {
+	if len(cli.passwordService.Token) == 0 {
 		log.Fatal("You should log in first")
 	}
 	var input string
@@ -80,7 +81,13 @@ func (cli *CLI) Shell() {
 				fmt.Println("You need to provide the key of the password. See help for instructions")
 				continue
 			}
-			// TODO do a get request for a specific password
+			key := args[0]
+			response, err := cli.passwordService.GetPassword(key)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			fmt.Println(response.Pwd)
 		case SAVE:
 			if len(args) < 2 {
 				fmt.Println("You need to provide both the key and the password. See help for instructions.")
