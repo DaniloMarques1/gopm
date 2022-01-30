@@ -93,7 +93,14 @@ func (cli *CLI) Shell() {
 				fmt.Println("You need to provide both the key and the password. See help for instructions.")
 				continue
 			}
-			// TODO do a post request to save a password
+			key, pwd := args[0], args[1]
+			pwdDto := dto.PasswordRequestDto{Key: key, Pwd: pwd}
+			err := cli.passwordService.Save(&pwdDto)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			fmt.Println("Password saved successfully")
 		case REMOVE:
 			if len(args) < 1 {
 				fmt.Println("You need to provide the key of the password. See help for instructions")

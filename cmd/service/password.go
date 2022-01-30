@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -45,4 +46,24 @@ func (ps *PasswordService) GetPassword(key string) (*dto.PasswordResponseDto, er
 		return nil, err
 	}
 	return &body, nil
+}
+
+func (ps *PasswordService) Save(pwdDto *dto.PasswordRequestDto) error {
+	b, err := json.Marshal(pwdDto)
+	if err != nil {
+		return err
+	}
+	request, err := http.NewRequest(http.MethodPost, BASE_URL+"/password", bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	request.Header.Add("Authorization", "Bearer "+ps.Token)
+	response, err := ps.client.Do(request)
+	if err != nil {
+		return err
+	}
+	if response.StatusCode != http.StatusCreated {
+		return util.HandleError(response.Body)
+	}
+	return nil
 }
