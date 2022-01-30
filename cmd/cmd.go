@@ -27,12 +27,9 @@ func Run(command string) {
 	switch command {
 	case ACCESS:
 		// TODO
+		cli.Access()
 		break
 	case REGISTER:
-		// TODO
-		// requisitar email
-		// requisitar senha
-		// enviar requisicao post para /master
 		cli.Register()
 		break
 	default:

@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/danilomarques1/gopm/cmd/dto"
@@ -40,4 +41,35 @@ func (ms *MasterService) Register(masterDto dto.MasterRegisterDto) error {
 		return util.HandleError(response.Body)
 	}
 	return nil
+}
+
+func (ms *MasterService) Access(sessionDto dto.SessionRequestDto) (*dto.SessionResponseDto, error) {
+	b, err := json.Marshal(sessionDto)
+	if err != nil {
+		return nil, err
+	}
+	request, err := http.NewRequest(http.MethodPost, BASE_URL+"/session", bytes.NewReader(b))
+	if err != nil {
+		return nil, err
+	}
+	response, err := ms.client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, util.HandleError(response.Body)
+	}
+
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	var body dto.SessionResponseDto
+	if err := json.Unmarshal(bodyBytes, &body); err != nil {
+		return nil, err
+	}
+
+	return &body, nil
 }

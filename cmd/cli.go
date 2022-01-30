@@ -2,9 +2,13 @@ package cmd
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
+	"runtime"
+	"strings"
 	"syscall"
 
 	"github.com/danilomarques1/gopm/cmd/dto"
@@ -24,9 +28,6 @@ func NewCLI() *CLI {
 	return &CLI{masterService: masterService, scanner: scanner}
 }
 
-func (cli *CLI) RequireMasterPassword() {
-}
-
 func (cli *CLI) Register() {
 	email := cli.getEmailFromInput()
 	password, err := cli.getPasswordFromInput()
@@ -38,6 +39,89 @@ func (cli *CLI) Register() {
 		log.Fatal(err)
 	}
 	fmt.Println("Master successfully created")
+}
+
+func (cli *CLI) Access() {
+	email := cli.getEmailFromInput()
+	password, err := cli.getPasswordFromInput()
+	if err != nil {
+		log.Fatal(err)
+	}
+	sessionDto := dto.SessionRequestDto{Email: email, Pwd: password}
+	response, err := cli.masterService.Access(sessionDto)
+	if err != nil {
+		log.Fatal(err)
+	}
+	cli.token = response.Token
+	cli.Shell()
+}
+
+func (cli *CLI) Shell() {
+	if cli.token == "" {
+		log.Fatal("You should log in first")
+	}
+	var input string
+	for {
+		fmt.Print(">> ")
+		if cli.scanner.Scan() {
+			input = cli.scanner.Text()
+		}
+
+		cmd, args, err := cli.parseInput(input)
+		if err != nil {
+			continue
+		}
+
+		switch cmd {
+		case HELP:
+			cli.Usage()
+		case GET:
+			if len(args) < 1 {
+				fmt.Println("You need to provide the key of the password. See help for instructions")
+				continue
+			}
+			// TODO do a get request for a specific password
+		case SAVE:
+			if len(args) < 2 {
+				fmt.Println("You need to provide both the key and the password. See help for instructions.")
+				continue
+			}
+			// TODO do a post request to save a password
+		case REMOVE:
+			if len(args) < 1 {
+				fmt.Println("You need to provide the key of the password. See help for instructions")
+				continue
+			}
+			// TODO do a delete request o remove a password
+		case KEYS:
+			// TODO do a get request for all keys
+		case CLEAR:
+			operatingSystem := runtime.GOOS
+			var cmdToBeExecuted string
+
+			switch operatingSystem {
+			case "linux":
+				cmdToBeExecuted = "clear"
+			case "windows":
+				cmdToBeExecuted = "cls"
+			default:
+				cmdToBeExecuted = "Not implemented yet"
+
+			}
+
+			cmd := exec.Command(cmdToBeExecuted)
+			out, err := cmd.Output()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Print(string(out))
+		case EXIT:
+			os.Exit(1)
+		default:
+			fmt.Println(CMD_NOT_FOUND)
+			continue
+		}
+	}
 }
 
 // request for user input without showing whats being inputed
@@ -52,6 +136,7 @@ func (cli *CLI) getPasswordFromInput() (string, error) {
 	return pwd, nil
 }
 
+// reads user input for an email
 func (cli *CLI) getEmailFromInput() string {
 	fmt.Print("Type your email address: ")
 	var email string
@@ -59,6 +144,17 @@ func (cli *CLI) getEmailFromInput() string {
 		email = cli.scanner.Text()
 	}
 	return email
+}
+
+// will get the user input like save password_key password_value
+// and return the command, in this case save, and its arguments,
+// in this case [password_key, password_value]
+func (cli *CLI) parseInput(input string) (string, []string, error) {
+	if len(input) == 0 {
+		return "", nil, errors.New(CMD_NOT_FOUND)
+	}
+	splitted := strings.Split(input, " ")
+	return splitted[0], splitted[1:], nil
 }
 
 // show a list of available commands
