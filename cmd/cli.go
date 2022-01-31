@@ -156,7 +156,7 @@ func (cli *CLI) Shell() {
 // request for user input without showing whats being inputed
 func (cli *CLI) getPasswordFromInput() (string, error) {
 	fmt.Print("Type your password: ")
-	bytes, err := terminal.ReadPassword(syscall.Stdin)
+	bytes, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return "", err
 	}
