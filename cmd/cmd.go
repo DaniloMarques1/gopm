@@ -7,6 +7,7 @@ const (
 	SAVE     = "save"
 	REMOVE   = "remove"
 	KEYS     = "keys"
+	UPDATE   = "update"
 )
 
 // cli commands

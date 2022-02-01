@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/danilomarques1/gopm/cmd/dto"
@@ -112,4 +113,29 @@ func (ps *PasswordService) Keys() (*dto.KeysResponseDto, error) {
 		return nil, err
 	}
 	return &keysDto, nil
+}
+
+func (ps *PasswordService) UpdateByKey(pwdDto *dto.PasswordUpdateRequestDto) error {
+	b, err := json.Marshal(pwdDto)
+	if err != nil {
+		return err
+	}
+	request, err := http.NewRequest(http.MethodPut, BASE_URL+"/password", bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	request.Header.Add("Authorization", "Bearer "+ps.Token)
+	response, err := ps.client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	log.Println(response.StatusCode)
+
+	if response.StatusCode != http.StatusNoContent {
+		return util.HandleError(response.Body)
+	}
+
+	return nil
 }

@@ -30,9 +30,13 @@ func NewCLI() *CLI {
 
 func (cli *CLI) Register() {
 	email := cli.getEmailFromInput()
-	password, err := cli.getPasswordFromInput()
+	password, err := cli.getPasswordFromInput("Type your password: ")
 	if err != nil {
 		log.Fatal(err)
+	}
+	confirmPassword, err := cli.getPasswordFromInput("Confirm your password: ")
+	if password != confirmPassword {
+		log.Fatal(errors.New("Wrong password confirmation"))
 	}
 	registerDto := dto.MasterRegisterDto{Email: email, Pwd: password}
 	if err := cli.masterService.Register(registerDto); err != nil {
@@ -44,7 +48,7 @@ func (cli *CLI) Register() {
 // sign in
 func (cli *CLI) Access() {
 	email := cli.getEmailFromInput()
-	password, err := cli.getPasswordFromInput()
+	password, err := cli.getPasswordFromInput("Type your password: ")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -107,7 +111,6 @@ func (cli *CLI) Shell() {
 				fmt.Println("You need to provide the key of the password. See help for instructions")
 				continue
 			}
-			// TODO do a delete request o remove a password
 			key := args[0]
 			if err := cli.passwordService.RemoveByKey(key); err != nil {
 				fmt.Println(err)
@@ -124,26 +127,33 @@ func (cli *CLI) Shell() {
 			for idx, key := range response.Keys {
 				fmt.Printf("%v- %v\n", idx+1, key)
 			}
+		case UPDATE:
+			if len(args) < 2 {
+				fmt.Println("You need to provide both the key and the password. See help for instructions.")
+				continue
+			}
+			key, pwd := args[0], args[1]
+			pwdDto := dto.PasswordUpdateRequestDto{Key: key, Pwd: pwd}
+			if err := cli.passwordService.UpdateByKey(&pwdDto); err != nil {
+				fmt.Println(err)
+				continue
+			}
+			fmt.Println("Password updated successfully")
 		case CLEAR:
 			operatingSystem := runtime.GOOS
-			var cmdToBeExecuted string
-
 			switch operatingSystem {
-			case "linux":
-				cmdToBeExecuted = "clear"
 			case "windows":
-				cmdToBeExecuted = "cls"
+				exec.Command("cls").Run()
 			default:
-				cmdToBeExecuted = "Not implemented yet"
+				// linux and mac os
+				cmd := exec.Command("clear")
+				out, err := cmd.Output()
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println(string(out))
 
 			}
-
-			cmd := exec.Command(cmdToBeExecuted)
-			out, err := cmd.Output()
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Print(string(out))
 		case EXIT:
 			os.Exit(1)
 		default:
@@ -154,8 +164,8 @@ func (cli *CLI) Shell() {
 }
 
 // request for user input without showing whats being inputed
-func (cli *CLI) getPasswordFromInput() (string, error) {
-	fmt.Print("Type your password: ")
+func (cli *CLI) getPasswordFromInput(label string) (string, error) {
+	fmt.Print(label)
 	bytes, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return "", err
@@ -199,6 +209,7 @@ func (cli *CLI) Usage() {
 	fmt.Printf("\t%v        \tHave a shell access as master\n", ACCESS)
 	fmt.Printf("\t%v        \tWill retrieve a stored password. You need to provide the password name you used when you save it\n", GET)
 	fmt.Printf("\t%v        \tWil save a password. You need to provide the password name and the password itself when using the command\n", SAVE)
+	fmt.Printf("\t%v        \tWill update a previously saved password.\n", UPDATE)
 	fmt.Printf("\t%v        \tWil remove a password. You need to provide the password name when using the command\n", REMOVE)
 	fmt.Printf("\t%v        \tReturn all the passwords keys stored\n", KEYS)
 	fmt.Printf("\t%v        \tExits the password manager\n", EXIT)
