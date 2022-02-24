@@ -13,7 +13,7 @@ import (
 
 type PasswordService struct {
 	Token  string
-	client *http.Client 
+	client *http.Client
 }
 
 func NewPasswordService(token string) *PasswordService {

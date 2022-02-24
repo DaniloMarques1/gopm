@@ -37,7 +37,6 @@ func (ms *MasterService) Register(masterDto dto.MasterRegisterDto) error {
 	}
 	defer response.Body.Close()
 
-
 	if response.StatusCode != http.StatusCreated {
 		return util.HandleError(response.Body)
 	}
