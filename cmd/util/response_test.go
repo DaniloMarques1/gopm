@@ -22,6 +22,7 @@ func TestHandleError(t *testing.T) {
 		returnedErr bool
 	}{
 		{"ShouldParseError", mockReader(ERROR_RESPONSE), "Some crazy shit error", false},
+		{"ShouldParseError", mockReader("Wrong json"), "invalid character 'W' looking for beginning of value", true},
 	}
 
 	for _, tc := range cases {
