@@ -13,11 +13,10 @@ import (
 
 type PasswordService struct {
 	Token  string
-	client *http.Client
+	client httpClient
 }
 
-func NewPasswordService(token string) *PasswordService {
-	client := &http.Client{}
+func NewPasswordService(token string, client httpClient) *PasswordService {
 	return &PasswordService{Token: token, client: client}
 }
 

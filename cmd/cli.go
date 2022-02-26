@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
@@ -23,7 +24,7 @@ type CLI struct {
 }
 
 func NewCLI() *CLI {
-	masterService := service.NewMasterService()
+	masterService := service.NewMasterService(&http.Client{})
 	scanner := bufio.NewScanner(os.Stdin)
 	return &CLI{masterService: masterService, scanner: scanner}
 }
@@ -57,7 +58,7 @@ func (cli *CLI) Access() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	passwordService := service.NewPasswordService(response.Token)
+	passwordService := service.NewPasswordService(response.Token, &http.Client{})
 	cli.passwordService = passwordService
 	cli.Shell()
 }
@@ -111,6 +112,7 @@ func (cli *CLI) Shell() {
 				fmt.Println("You need to provide the key of the password. See help for instructions")
 				continue
 			}
+
 			key := args[0]
 			if err := cli.passwordService.RemoveByKey(key); err != nil {
 				fmt.Println(err)

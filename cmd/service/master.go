@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"fmt"
 	"net/http"
 
 	"github.com/danilomarques1/gopm/cmd/dto"
@@ -13,12 +14,15 @@ import (
 //const BASE_URL = "https://gopmserver.herokuapp.com"
 const BASE_URL = "http://127.0.0.1:8080"
 
-type MasterService struct {
-	client *http.Client
+type httpClient interface {
+	Do(*http.Request) (*http.Response, error)
 }
 
-func NewMasterService() *MasterService {
-	client := &http.Client{}
+type MasterService struct {
+	client httpClient
+}
+
+func NewMasterService(client httpClient) *MasterService {
 	return &MasterService{client: client}
 }
 
@@ -27,6 +31,7 @@ func (ms *MasterService) Register(masterDto dto.MasterRegisterDto) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println(string(b))
 	request, err := http.NewRequest(http.MethodPost, BASE_URL+"/master", bytes.NewReader(b))
 	if err != nil {
 		return err
