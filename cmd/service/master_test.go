@@ -11,6 +11,12 @@ import (
 	"github.com/danilomarques1/gopm/cmd/dto"
 )
 
+// represents the server errors
+const (
+	INVALID_BODY  = `{"message": "invalid body"}`
+	INVALID_EMAIL = `{"message": "Email already in use"}`
+)
+
 type readerMock struct {
 	reader io.Reader
 }
@@ -28,10 +34,7 @@ func (rm *readerMock) Read(p []byte) (n int, err error) {
 	return rm.reader.Read(p)
 }
 
-const (
-	INVALID_BODY = `{"message": "invalid body"}`
-	INVALID_EMAIL = `{"message": "Email already in use"}`
-)
+type DoRequestFunc func(request *http.Request) (*http.Response, error)
 
 func DoRegister(request *http.Request) (*http.Response, error) {
 	response := &http.Response{}
@@ -86,14 +89,13 @@ func DoAccess(request *http.Request) (*http.Response, error) {
 	return response, nil
 }
 
-type DoRequestFunc func(request *http.Request) (*http.Response, error)
-
+// mock the http client
 type clientMock struct {
 	DoRequest DoRequestFunc
 }
 
 func NewClientMock(Do DoRequestFunc) *clientMock {
-	return &clientMock{DoRequest:Do}
+	return &clientMock{DoRequest: Do}
 }
 
 func (client *clientMock) Do(request *http.Request) (*http.Response, error) {
@@ -101,14 +103,14 @@ func (client *clientMock) Do(request *http.Request) (*http.Response, error) {
 }
 
 func TestRegister(t *testing.T) {
-	cases := []struct{
+	cases := []struct {
 		label             string
 		body              dto.MasterRegisterDto
 		shouldReturnError bool
 	}{
-		{"ShouldRegisterMaster", dto.MasterRegisterDto{Email: "test@mail.com",Pwd: "123456"}, false},
+		{"ShouldRegisterMaster", dto.MasterRegisterDto{Email: "test@mail.com", Pwd: "123456"}, false},
 		{"ShouldReturnError", dto.MasterRegisterDto{}, true},
-		{"ShouldRegisterMaster", dto.MasterRegisterDto{Email: "fitz@mail.com",Pwd: "123456"}, true},
+		{"ShouldRegisterMaster", dto.MasterRegisterDto{Email: "fitz@mail.com", Pwd: "123456"}, true},
 	}
 
 	for _, tc := range cases {
@@ -124,15 +126,15 @@ func TestRegister(t *testing.T) {
 }
 
 func TestAccess(t *testing.T) {
-	cases := []struct{
+	cases := []struct {
 		label             string
 		body              dto.SessionRequestDto
 		shouldReturnError bool
 		token             string
 	}{
-		{"ShouldRegisterMaster", dto.SessionRequestDto{Email: "test@mail.com",Pwd: "123456"}, false, "token"},
+		{"ShouldRegisterMaster", dto.SessionRequestDto{Email: "test@mail.com", Pwd: "123456"}, false, "token"},
 		{"ShouldReturnError", dto.SessionRequestDto{}, true, ""},
-		{"ShouldRegisterMaster", dto.SessionRequestDto{Email: "fitz@mail.com",Pwd: "123456"}, true, ""},
+		{"ShouldRegisterMaster", dto.SessionRequestDto{Email: "fitz@mail.com", Pwd: "123456"}, true, ""},
 	}
 
 	for _, tc := range cases {

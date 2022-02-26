@@ -3,8 +3,8 @@ package service
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/danilomarques1/gopm/cmd/dto"
