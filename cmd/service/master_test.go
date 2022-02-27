@@ -13,6 +13,7 @@ import (
 
 // represents the server errors
 const (
+	INVALID_TOKEN = `{"message": "Invalid token"}`
 	INVALID_BODY  = `{"message": "invalid body"}`
 	INVALID_EMAIL = `{"message": "Email already in use"}`
 )

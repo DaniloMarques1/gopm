@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/danilomarques1/gopm/cmd/dto"
@@ -129,8 +128,6 @@ func (ps *PasswordService) UpdateByKey(pwdDto *dto.PasswordUpdateRequestDto) err
 		return err
 	}
 	defer response.Body.Close()
-
-	log.Println(response.StatusCode)
 
 	if response.StatusCode != http.StatusNoContent {
 		return util.HandleError(response.Body)
